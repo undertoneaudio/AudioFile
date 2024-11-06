@@ -1,0 +1,53 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run Tests",
+            "request": "launch",
+            "type": "cppdbg",
+            "program": "${command:cmake.buildDirectory}/tests/Tests",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/tests",
+            "environment": [],
+            "externalConsole": false,
+            "preLaunchTask": "Build Tests",
+            "linux": {
+                "MIMode": "gdb",
+                "miDebuggerPath": "/usr/bin/gdb"
+            },
+            "osx": {
+                "MIMode": "lldb",
+                "miDebuggerPath": "/usr/bin/lldb"
+            },
+            "windows": {
+                "program": "${command:cmake.buildDirectory}\\tests\\Debug\\Tests.exe",
+                "type": "cppvsdbg"
+            }
+        },
+        {
+            "name": "Run Examples",
+            "request": "launch",
+            "type": "cppdbg",
+            "program": "${command:cmake.buildDirectory}/examples/Examples",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/examples",
+            "environment": [],
+            "externalConsole": false,
+            "preLaunchTask": "Build Examples",
+            "linux": {
+                "MIMode": "gdb",
+                "miDebuggerPath": "/usr/bin/gdb"
+            },
+            "osx": {
+                "MIMode": "lldb",
+                "miDebuggerPath": "/usr/bin/lldb"
+            },
+            "windows": {
+                "program": "${command:cmake.buildDirectory}\\examples\\Debug\\Examples.exe",
+                "type": "cppvsdbg"
+            }
+        }
+    ]
+}

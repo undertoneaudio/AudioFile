@@ -27,3 +27,5 @@ xcuserdata/
 .vscode/
 
 audio-write-tests
+examples/sine-wave.wav
+examples/quieter-audio-file.wav
