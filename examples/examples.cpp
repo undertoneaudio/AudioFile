@@ -3,6 +3,38 @@
 #include <AudioFile.h>
 #include <AudioHeader.h>
 
+#include "MemoryMappedFile.h"
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <random>
+#include <chrono>
+#include <algorithm>
+
+void loadFileToMemory(const std::string& filePath, std::vector<uint8_t>& buffer)
+{
+    std::ifstream file(filePath, std::ios::binary);
+    if (!file)
+    {
+        throw std::runtime_error("ERROR: Could not open file for reading: " + filePath);
+    }
+
+    file.unsetf(std::ios::skipws);
+    file.seekg(0, std::ios::end);
+    std::streampos fileSize = file.tellg();
+    if (fileSize <= 0)
+    {
+        throw std::runtime_error("ERROR: File is empty or error reading file size: " + filePath);
+    }
+    file.seekg(0, std::ios::beg);
+
+    buffer.reserve(static_cast<size_t>(fileSize));
+    buffer.insert(buffer.begin(),
+                  std::istream_iterator<uint8_t>(file),
+                  std::istream_iterator<uint8_t>());
+}
+
+
  //=======================================================================
  namespace examples
  {
@@ -10,11 +42,14 @@
      void loadAudioFileAndPrintSummary();
      void loadAudioHeaderAndPrintSummary();
      void loadAudioFileAndProcessSamples();
+     void memoryMappedFile();
  }
 
 //=======================================================================
 int main()
 {
+    examples::memoryMappedFile();
+
     //---------------------------------------------------------------
     /** Writes a sine wave to an audio file */
     examples::writeSineWaveToAudioFile();
@@ -37,6 +72,121 @@ int main()
 //=======================================================================
 namespace examples
 {
+    void memoryMappedFile()
+    {
+        const std::string filePath = "../blob.txt";
+        const size_t chunkSize = 1024; // Set the size of compared data chunk in bytes
+        const int numIterations = 1000; // Number of random points to compare
+
+        try
+        {
+            // Load file to memory
+            std::vector<uint8_t> memoryData;
+            auto startLoadMemory = std::chrono::high_resolution_clock::now();
+            loadFileToMemory(filePath, memoryData);
+            auto endLoadMemory = std::chrono::high_resolution_clock::now();
+            std::cout << "Loaded file into memory. Size: " << memoryData.size() << " bytes" << std::endl;
+
+            // Map file using MemoryMappedFile
+            MemoryMappedFile mappedFile;
+            auto startMap = std::chrono::high_resolution_clock::now();
+            if (!mappedFile.open(filePath))
+            {
+                std::cerr << "Failed to memory-map the file." << std::endl;
+                return;
+            }
+            auto endMap = std::chrono::high_resolution_clock::now();
+            std::cout << "Memory-mapped file. Size: " << mappedFile.size() << " bytes" << std::endl;
+
+            // Ensure sizes match
+            if (memoryData.size() != mappedFile.size())
+            {
+                std::cerr << "ERROR: File sizes do not match." << std::endl;
+                return;
+            }
+
+            // Set up random number generator
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_int_distribution<size_t> dis(0, memoryData.size() - chunkSize);
+
+            // Vectors to store access and comparison times
+            std::vector<double> timesMemoryAccess;
+            std::vector<double> timesMappedAccess;
+            std::vector<double> timesComparison;
+
+            // Start comparing random chunks
+            bool allMatch = true;
+            for (int i = 0; i < numIterations; ++i)
+            {
+                size_t offset = dis(gen);
+
+                // Access in-memory data
+                auto startMemoryAccess = std::chrono::high_resolution_clock::now();
+                const uint8_t* memoryPtr = &memoryData[offset];
+                auto endMemoryAccess = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::nano> durationMemoryAccess = endMemoryAccess - startMemoryAccess;
+                timesMemoryAccess.push_back(durationMemoryAccess.count());
+
+                // Access memory-mapped data
+                auto startMappedAccess = std::chrono::high_resolution_clock::now();
+                const uint8_t* mappedPtr = mappedFile.data() + offset;
+                auto endMappedAccess = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::nano> durationMappedAccess = endMappedAccess - startMappedAccess;
+                timesMappedAccess.push_back(durationMappedAccess.count());
+
+                // Compare the chunks
+                auto startComparison = std::chrono::high_resolution_clock::now();
+                int cmpResult = std::memcmp(memoryPtr, mappedPtr, chunkSize);
+                auto endComparison = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::nano> durationComparison = endComparison - startComparison;
+                timesComparison.push_back(durationComparison.count());
+
+                if (cmpResult != 0)
+                {
+                    std::cerr << "ERROR: Data mismatch at offset " << offset << std::endl;
+                    allMatch = false;
+                    break;
+                }
+            }
+
+            if (allMatch)
+            {
+                std::cout << "All data chunks match." << std::endl;
+            }
+
+            // Function to compute statistics
+            auto computeStats = [](const std::vector<double>& times, const std::string& description)
+            {
+                double avg = std::accumulate(times.begin(), times.end(), 0.0) / times.size();
+                double minTime = *std::min_element(times.begin(), times.end());
+                double maxTime = *std::max_element(times.begin(), times.end());
+                std::cout << description << " Times (nanoseconds):" << std::endl;
+                std::cout << "Average: " << avg << std::endl;
+                std::cout << "Minimum: " << minTime << std::endl;
+                std::cout << "Maximum: " << maxTime << std::endl;
+            };
+
+            computeStats(timesMemoryAccess, "In-memory Access");
+            computeStats(timesMappedAccess, "Memory-mapped Access");
+            computeStats(timesComparison, "Comparison");
+
+            // Print load times
+            std::chrono::duration<double, std::milli> durationLoadMemory = endLoadMemory - startLoadMemory;
+            std::chrono::duration<double, std::milli> durationMap = endMap - startMap;
+            std::cout << "Time to load into memory: " << durationLoadMemory.count() << " ms" << std::endl;
+            std::cout << "Time to memory-map file: " << durationMap.count() << " ms" << std::endl;
+
+            // Close the memory-mapped file
+            mappedFile.close();
+        }
+        catch (const std::exception& ex)
+        {
+            std::cerr << ex.what() << std::endl;
+            return;
+        }
+    }
+
     //=======================================================================
     void writeSineWaveToAudioFile()
     {

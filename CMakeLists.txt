@@ -13,7 +13,7 @@ option (BUILD_TESTS "Build tests" ON)
 option (BUILD_EXAMPLES "Build examples" ON)
 
 #===============================================================================
-add_library (${PROJECT_NAME} INTERFACE)
+add_library (${PROJECT_NAME} STATIC MemoryMappedFile.cpp)
 
 #===============================================================================
 if(MSVC)

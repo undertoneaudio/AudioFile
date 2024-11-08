@@ -15,20 +15,6 @@
             "problemMatcher": []
         },
         {
-            "label": "CMake: build",
-            "type": "shell",
-            "command": "cmake",
-            "args": [
-                "--build",
-                "${command:cmake.buildDirectory}",
-                "--config",
-                "Debug"
-            ],
-            "group": "build",
-            "dependsOn": "CMake: configure",
-            "problemMatcher": []
-        },
-        {
             "label": "Build Tests",
             "type": "shell",
             "command": "cmake",
@@ -44,6 +30,7 @@
             "dependsOn": "CMake: configure",
             "problemMatcher": []
         },
+
         {
             "label": "Build Examples",
             "type": "shell",
@@ -55,6 +42,19 @@
                 "Debug",
                 "--target",
                 "Examples"
+            ],
+            "group": "build",
+            "dependsOn": "Generate Blob",
+            "problemMatcher": []
+        },
+        {
+            "label": "Generate Blob",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "generateBlob.py",
+                "blob.txt",
+                "10"
             ],
             "group": "build",
             "dependsOn": "CMake: configure",
