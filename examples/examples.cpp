@@ -1,12 +1,14 @@
 #include <iostream>
 #include <cmath>
 #include <AudioFile.h>
+#include <AudioHeader.h>
 
  //=======================================================================
  namespace examples
  {
      void writeSineWaveToAudioFile();
      void loadAudioFileAndPrintSummary();
+     void loadAudioHeaderAndPrintSummary();
      void loadAudioFileAndProcessSamples();
  }
 
@@ -16,6 +18,10 @@ int main()
     //---------------------------------------------------------------
     /** Writes a sine wave to an audio file */
     examples::writeSineWaveToAudioFile();
+    
+    //---------------------------------------------------------------
+    /** Loads an audio header and prints key details to the console*/
+    examples::loadAudioHeaderAndPrintSummary();
     
     //---------------------------------------------------------------
     /** Loads an audio file and prints key details to the console*/
@@ -70,6 +76,37 @@ namespace examples
         a.save ("sine-wave.wav", AudioFileFormat::Wave);
     }
     
+    //=======================================================================
+    void loadAudioHeaderAndPrintSummary()
+    {
+        //---------------------------------------------------------------
+        std::cout << "**********************" << std::endl;
+        std::cout << "Running Example: Load Audio File and Print Summary" << std::endl;
+        std::cout << "**********************" << std::endl << std::endl;
+        
+        //---------------------------------------------------------------
+        // 1. Set a file path to an audio file on your machine
+        const std::string filePath = std::string (PROJECT_BINARY_DIR) + "/test-audio.wav";
+        
+        //---------------------------------------------------------------
+        // 2. Create an AudioFile object and load the audio file
+        
+        AudioHeader<float> a;
+        bool loadedOK = a.loadHeader(filePath);
+        
+        /** If you hit this assert then the file path above
+         probably doesn't refer to a valid audio file */
+        assert (loadedOK);
+        
+        //---------------------------------------------------------------
+        // 3. Let's print out some key details
+        
+        std::cout << "Bit Depth: " << a.getBitDepth() << std::endl;
+        std::cout << "Sample Rate: " << a.getSampleRate() << std::endl;
+        std::cout << "Num Channels: " << a.getNumChannels() << std::endl;
+        std::cout << std::endl;
+    }
+
     //=======================================================================
     void loadAudioFileAndPrintSummary()
     {

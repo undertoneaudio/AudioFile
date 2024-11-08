@@ -86,7 +86,7 @@ public:
      * @Returns true if the file was successfully loaded
      */
     bool load (std::string filePath);
-    
+
     /** Saves an audio file to a given file path.
      * @Returns true if the file was successfully saved
      */
@@ -165,14 +165,7 @@ public:
     std::string iXMLChunk;
     
 private:
-    
-    //=============================================================
-    enum class Endianness
-    {
-        LittleEndian,
-        BigEndian
-    };
-    
+        
     //=============================================================
     AudioFileFormat determineAudioFileFormat (std::vector<uint8_t>& fileData);
     bool decodeWaveFile (std::vector<uint8_t>& fileData);

@@ -131,6 +131,13 @@ enum SampleLimit
     UnsignedInt24_Max = 16777215
 };
 
+//=============================================================
+enum class Endianness
+{
+    LittleEndian,
+    BigEndian
+};
+
 
 #if defined (_MSC_VER)
     __pragma(warning (pop))
