@@ -75,8 +75,8 @@ namespace examples
     void memoryMappedFile()
     {
         const std::string filePath = "../blob.txt";
-        const size_t chunkSize = 1024; // Set the size of compared data chunk in bytes
-        const int numIterations = 1000; // Number of random points to compare
+        const size_t chunkSize = 8192; // Set the size of compared data chunk in bytes
+        const int numIterations = 10000; // Number of random points to compare
 
         try
         {

@@ -54,7 +54,7 @@
             "args": [
                 "generateBlob.py",
                 "blob.txt",
-                "10"
+                "50"
             ],
             "group": "build",
             "dependsOn": "CMake: configure",
